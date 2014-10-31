@@ -78,6 +78,7 @@ struct all_same
 #define HAS_OPS(T)				\
 	all_same				\
 	<					\
+		std::true_type::type,		\
 		hasEqual_<T>::type,		\
 		hasGreater_<T>::type,		\
 		hasLowerOrEqual_<T>::type,	\
