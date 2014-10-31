@@ -6,22 +6,112 @@
 #include <unistd.h>
 #include <iostream>
 
-/* Trying my own implementation with SFINAE without Boost */
-template <typename, typename = std::true_type>
-struct has_greater : public std::false_type {
+/* Trying my own implementation of 'hasOperators' with SFINAE without Boost */
+#define GenerateHasOperator(OpName, OpSymb)		\
+template <typename, typename = std::true_type>		\
+struct has##OpName##_ : public std::false_type {	\
+};							\
+							\
+template <typename T>					\
+struct has##OpName##_					\
+<							\
+	T,						\
+	typename std::is_convertible			\
+	<						\
+		decltype(T() OpSymb T()),		\
+		bool					\
+	>::type						\
+> : public std::true_type {				\
 };
 
-template <typename T>
-struct has_greater
+GenerateHasOperator(	Greater,	>	)
+GenerateHasOperator(	Lower,		<	)
+GenerateHasOperator(	Equal,		==	)
+GenerateHasOperator(	LowerOrEqual,	<=	)
+GenerateHasOperator(	GreaterOrEqual,	>=	)
+
+/* template list == [empty] -> return false */
+template
+<
+	typename T,
+	typename... TList
+>
+struct all_same : std::true_type {
+};
+
+/* template list == element::[empty] ?
+ * 	-> return is_same<T, element>
+ */
+template
+<
+	typename T,
+	typename Head
+>
+struct all_same
 <
 	T,
-	typename std::is_convertible
-	<
-		decltype(T() > T()),
-		bool
-	>::type
-> : public std::true_type {
+	Head
+> : std::is_same<T, Head> {
 };
+
+/* template list == element::[rest] ?
+ * 	-> return is_same<T, element>::value && all_same<T, rest>::value
+ */
+template
+<
+	typename T,
+	typename Head,
+	typename... TList
+>
+struct all_same
+<
+	T,
+	Head,
+	TList...
+> : std::integral_constant
+	<
+		bool,
+		std::is_same<T, Head>::value && all_same<T, TList...>::value
+	> {
+};
+
+#define HAS_OPS(T)				\
+	all_same				\
+	<					\
+		hasEqual_<T>::type,		\
+		hasGreater_<T>::type,		\
+		hasLowerOrEqual_<T>::type,	\
+		hasLower_<T>::type,		\
+		hasGreaterOrEqual_<T>::type	\
+	>
+
+/*
+template
+<
+	typename T
+>
+bool hasOps <T, typename = std::false_type> () {
+	std::cout << "LOOOOOOOOOOOOOOOOOOL" << std::endl;
+	return true;
+}
+
+template
+<
+	typename T, 
+	class = typename std::enable_if
+	<
+		hasGreater_<T>::value
+		& hasLower_<T>::value
+		& hasEqual_<T>::value
+		& hasLowerOrEqual_<T>::value
+		& hasGreaterOrEqual_<T>::value
+	>::type
+>
+bool hasOps () {
+	std::cout << "LOOOOOOOOOOOOOOOOOOL" << std::endl;
+	return true;
+}
+*/
 
 //template <typename Tweight>
 
