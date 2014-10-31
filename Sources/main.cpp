@@ -2,10 +2,11 @@
 
 struct Foo {
 	bool operator>(const Foo&) const { return true; }
+	bool operator!=(const Foo&) const { return true; }
 	bool operator==(const Foo&) const { return true; }
 	bool operator<(const Foo&) const { return true; }
 	bool operator>=(const Foo&) const { return true; }
-//	bool operator<=(const Foo&) const { return true; }
+	bool operator<=(const Foo&) const { return true; }
 };
 
 int main(int argc, char **argv) {
@@ -15,7 +16,8 @@ int main(int argc, char **argv) {
 	std::cout << hasLower_<Foo>::value << std::endl;
 	std::cout << hasLowerOrEqual_<Foo>::value << std::endl;
 	std::cout << hasGreaterOrEqual_<Foo>::value << std::endl;
-	std::cout << HAS_OPS(Foo)::value << std::endl;
+	std::cout << STATIC_HAS_OPS(Foo)::value << std::endl;
+
 //	std::cout << vert.getId() << std::endl;
 	return 0;
 }

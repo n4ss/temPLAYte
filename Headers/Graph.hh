@@ -3,8 +3,11 @@
 
 //#include <pair>
 //#include <string>
+#include <vector>
 #include <unistd.h>
 #include <iostream>
+#include <cerrno>
+#include <cstdio>
 
 /* Trying my own implementation of 'hasOperators' with SFINAE without Boost */
 #define GenerateHasOperator(OpName, OpSymb)		\
@@ -24,13 +27,19 @@ struct has##OpName##_					\
 > : public std::true_type {				\
 };
 
+/* Define required Operators checkers:
+ * { ==, !=, <. >, <=, >= }
+ */
 GenerateHasOperator(	Greater,	>	)
 GenerateHasOperator(	Lower,		<	)
 GenerateHasOperator(	Equal,		==	)
+GenerateHasOperator(	Different,	!=	)
 GenerateHasOperator(	LowerOrEqual,	<=	)
 GenerateHasOperator(	GreaterOrEqual,	>=	)
 
-/* template list == [empty] -> return false */
+/* template list == [empty] ?
+ * 	-> return true
+ */
 template
 <
 	typename T,
@@ -55,7 +64,8 @@ struct all_same
 };
 
 /* template list == element::[rest] ?
- * 	-> return is_same<T, element>::value && all_same<T, rest>::value
+ * 	-> return is_same<T, element>::value
+ * 		  && all_same<T, rest>::value
  */
 template
 <
@@ -75,74 +85,121 @@ struct all_same
 	> {
 };
 
-#define HAS_OPS(T)				\
+/* Static check if T has every Operators from
+ * { ==, !=, <, >, <=, >= }
+ * -> Used for weight's type checking
+ */
+#define STATIC_HAS_OPS(T)			\
 	all_same				\
 	<					\
 		std::true_type::type,		\
 		hasEqual_<T>::type,		\
+		hasDifferent_<T>::type,		\
 		hasGreater_<T>::type,		\
 		hasLowerOrEqual_<T>::type,	\
 		hasLower_<T>::type,		\
 		hasGreaterOrEqual_<T>::type	\
 	>
 
-/*
-template
-<
-	typename T
->
-bool hasOps <T, typename = std::false_type> () {
-	std::cout << "LOOOOOOOOOOOOOOOOOOL" << std::endl;
-	return true;
-}
+/* Static check if T has Operators from
+ * { ==, != }
+ * -> Used for identifier's type checking
+ */
+#define STATIC_HAS_EQ(T)			\
+	all_same				\
+	<					\
+		std::true_type::type,		\
+		hasEqual_<T>::type,		\
+		hasDifferent_<T>::type,		\
+	>
 
-template
-<
-	typename T, 
-	class = typename std::enable_if
-	<
-		hasGreater_<T>::value
-		& hasLower_<T>::value
-		& hasEqual_<T>::value
-		& hasLowerOrEqual_<T>::value
-		& hasGreaterOrEqual_<T>::value
-	>::type
->
-bool hasOps () {
-	std::cout << "LOOOOOOOOOOOOOOOOOOL" << std::endl;
-	return true;
-}
-*/
-
-//template <typename Tweight>
-
+/* Vertex class
+ * defined by an identifier of template type
+ */
 template <typename Tid>
 class Vertex {
 public:
-	Vertex(Tid id) {
-		_id = id;
-	}
+	Vertex(Tid id) { _id = id; }
 
-	Tid getId() {
-		return this->_id;
-	}
+	Tid getId() { return _id; }
+	void setId(Tid id) { _id = id; }
+
 private:
 	Tid _id;
 };
 
+/* Edge class
+ * defined by:
+ * 	a Vertex& origin,
+ * 	a Vertex& destination,
+ * 	a weight of template type that has every Operators from
+ * 	{ ==, !=, <, >, <=, >= }
+ */
 template <
 	typename Tid,
 	typename Tweight
 	>
 class Edge {
 public:
+	Edge(Vertex<Tid>& orig, Vertex<Tid>& dest,
+	     Tweight weight) {
+		_orig = orig;
+		_dest = dest;
+		_weight = weight;
+	}
+
+	Vertex<Tid>& getOrigin() { return _orig; }
+	void setOrigin(Vertex<Tid> orig) { _orig = orig; }
+
+	Vertex<Tid>& getDest() { return _dest; }
+	void setDest(Vertex<Tid> dest) { _dest = dest; }
+
+	Tweight getWeight() { return _weight; }
 
 private:
-	Vertex<Tid> _orig;
-	Vertex<Tid> _dest;
+	Vertex<Tid>&	_orig;
+	Vertex<Tid>&	_dest;
+	Tweight		_weight;
 };
 
-template <typename _Tdata> class Pgraph {
+/* Pgraph class
+ * defined by:
+ * 	a vector of vertices,
+ * 	a vector of edges,
+ * TODO:
+ * 	add an optional weight function that sets
+ * 	the weight for each edge
+ */
+template <typename Tid, typename Tweight>
+class Pgraph {
+public:
+	void pgraph_dump(void) {
+		size_t i = 0;
+		for (auto elt : _vertices) {
+			std::cout << "Edge[" << i << "]:" << std:: endl;
+			++i;
+		}
+	}
+
+#if 0
+	void static_check(void) {
+		static_assert(STATIC_HAS_OPS(Tweight)::value != 1,
+				"Tweight is missing Operators from "
+				"{ ==, <=, >=, <, >, != }"
+				);
+
+		static_assert(STATIC_HAS_EQ(Tid)::value != 1,
+				"Tid is missing Operators from "
+				"{ ==, != }"
+				);
+			
+	}
+#endif
+
+private:
+
+	std::vector<Vertex<Tid>&> _vertices;
+	std::vector<Edge<Tid, Tweight>&> _edges;
 };
 
 #endif /* __GRAPH_H__ */
