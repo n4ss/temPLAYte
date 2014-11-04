@@ -13,7 +13,7 @@ endif ()
 
 message("Building for target ${OS_NAME}-${ARCH_NAME}")
 
-set(CMAKE_CXX_COMPILER	"g++")
+set(CMAKE_CXX_COMPILER	"clang++")
 
 set(TARGET_COMMON_SOURCES
 	Sources/main.cpp

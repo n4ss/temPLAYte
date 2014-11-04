@@ -10,14 +10,14 @@ struct Foo {
 };
 
 int main(int argc, char **argv) {
+	Pgraph<std::string, int> p = Pgraph<std::string, int>();
 	Vertex<std::string> vert = Vertex<std::string>("1");
 	std::cout << hasEqual_<Foo>::value << std::endl;
 	std::cout << hasGreater_<Foo>::value << std::endl;
 	std::cout << hasLower_<Foo>::value << std::endl;
 	std::cout << hasLowerOrEqual_<Foo>::value << std::endl;
 	std::cout << hasGreaterOrEqual_<Foo>::value << std::endl;
-	std::cout << STATIC_HAS_OPS(Foo)::value << std::endl;
-
+//	std::cout << STATIC_HAS_OPS(Foo)::value << std::endl;
 //	std::cout << vert.getId() << std::endl;
 	return 0;
 }

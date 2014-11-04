@@ -89,16 +89,16 @@ struct all_same
  * { ==, !=, <, >, <=, >= }
  * -> Used for weight's type checking
  */
-#define STATIC_HAS_OPS(T)			\
-	all_same				\
-	<					\
-		std::true_type::type,		\
-		hasEqual_<T>::type,		\
-		hasDifferent_<T>::type,		\
-		hasGreater_<T>::type,		\
-		hasLowerOrEqual_<T>::type,	\
-		hasLower_<T>::type,		\
-		hasGreaterOrEqual_<T>::type	\
+#define STATIC_HAS_OPS(T)				\
+	all_same					\
+	<						\
+		std::true_type::type,			\
+		hasEqual_<typename T>::type,		\
+		hasDifferent_<typename T>::type,	\
+		hasGreater_<typename T>::type,		\
+		hasLowerOrEqual_<typename T>::type,	\
+		hasLower_<typename T>::type,		\
+		hasGreaterOrEqual_<typename T>::type	\
 	>
 
 /* Static check if T has Operators from
@@ -181,25 +181,24 @@ public:
 		}
 	}
 
-#if 0
 	void static_check(void) {
 		static_assert(STATIC_HAS_OPS(Tweight)::value != 1,
 				"Tweight is missing Operators from "
 				"{ ==, <=, >=, <, >, != }"
 				);
 
+	/*
 		static_assert(STATIC_HAS_EQ(Tid)::value != 1,
 				"Tid is missing Operators from "
 				"{ ==, != }"
 				);
-			
+	*/
 	}
-#endif
 
 private:
 
-	std::vector<Vertex<Tid>&> _vertices;
-	std::vector<Edge<Tid, Tweight>&> _edges;
+	std::vector<Vertex<Tid>> _vertices;
+	std::vector<Edge<Tid, Tweight>> _edges;
 };
 
 #endif /* __GRAPH_H__ */
